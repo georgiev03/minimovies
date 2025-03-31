@@ -38,8 +38,8 @@ async function createAdminUser() {
       .insert([
         {
           id: authData.user.id,
-          email: 'admin@example.com',
-          full_name: 'Admin User',
+          email: 'admin@gmail.com',
+          full_name: 'Admin',
           role: 'admin',
         },
       ])

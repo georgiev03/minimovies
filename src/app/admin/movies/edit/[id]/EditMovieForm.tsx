@@ -117,11 +117,11 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-50 text-red-500 p-3 rounded-md">{error}</div>
+        <div className="bg-red-50 dark:bg-red-900/50 text-red-500 dark:text-red-400 p-3 rounded-md">{error}</div>
       )}
       
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Title
         </label>
         <input
@@ -129,14 +129,14 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+          className="block w-full rounded-md bg-gray-100 dark:bg-gray-800 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-700 focus:ring-indigo-500"
           placeholder="Enter movie title"
           required
         />
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Description
         </label>
         <textarea
@@ -144,14 +144,14 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={3}
-          className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+          className="block w-full rounded-md bg-gray-100 dark:bg-gray-800 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-700 focus:ring-indigo-500"
           placeholder="Enter movie description"
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Genres
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -163,7 +163,7 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
                 formData.genres.includes(genre)
                   ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
               {genre}
@@ -171,12 +171,12 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
           ))}
         </div>
         {formData.genres.length === 0 && (
-          <p className="mt-1 text-sm text-red-500">Please select at least one genre</p>
+          <p className="mt-1 text-sm text-red-500 dark:text-red-400">Please select at least one genre</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="video_url" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="video_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Video URL
         </label>
         <input
@@ -184,14 +184,14 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
           id="video_url"
           value={formData.video_url}
           onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-          className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+          className="block w-full rounded-md bg-gray-100 dark:bg-gray-800 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-700 focus:ring-indigo-500"
           placeholder="Enter video URL"
           required
         />
       </div>
 
       <div>
-        <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Thumbnail URL
         </label>
         <input
@@ -199,7 +199,7 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
           id="thumbnail_url"
           value={formData.thumbnail_url}
           onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-          className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+          className="block w-full rounded-md bg-gray-100 dark:bg-gray-800 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-700 focus:ring-indigo-500"
           placeholder="Enter thumbnail URL"
           required
         />
@@ -209,7 +209,7 @@ export default function EditMovieForm({ movie }: { movie: Movie }) {
         <button
           type="button"
           onClick={() => router.push('/admin/movies')}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Cancel
         </button>
