@@ -40,14 +40,14 @@ export default async function HomePage() {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Movies</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Featured Movies</h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-w-[1400px] mx-auto">
           {featuredMovies.map((movie) => (
             <Link
               key={movie.id}
               href={`/movies/${movie.id}`}
-              className="group relative overflow-hidden rounded-lg bg-white shadow-md transition-transform hover:scale-105 w-full"
+              className="group relative overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-800 shadow-md transition-transform hover:scale-105 w-full"
             >
               <div className="relative pb-[150%]">
                 <img
@@ -57,13 +57,13 @@ export default async function HomePage() {
                 />
               </div>
               <div className="p-2">
-                <h3 className="text-sm font-semibold text-gray-900 truncate">{movie.title}</h3>
-                <p className="mt-1 text-xs text-gray-500 line-clamp-2">{movie.description}</p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">{movie.title}</h3>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{movie.description}</p>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {movie.movie_genres.map((mg: MovieGenre) => (
                     <span
                       key={mg.genres.name}
-                      className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                      className="inline-flex items-center rounded-full bg-indigo-100 dark:bg-indigo-900 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:text-indigo-300"
                     >
                       {mg.genres.name}
                     </span>

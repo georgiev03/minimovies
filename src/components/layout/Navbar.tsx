@@ -53,7 +53,7 @@ export default function Navbar() {
               </Link>
               {user && (
                 <Link
-                  href="/profile"
+                  href="/profile/watch-history"
                   className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
                 >
                   <UserIcon className="h-5 w-5 mr-1" />
