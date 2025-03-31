@@ -66,12 +66,12 @@ export default function AuthModal({
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
                 <div>
                   <div className="absolute right-0 top-0 pr-4 pt-4">
                     <button
                       type="button"
-                      className="rounded-md bg-white text-gray-400 hover:text-gray-500"
+                      className="rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
                       onClick={onClose}
                     >
                       <span className="sr-only">Close</span>
@@ -81,7 +81,7 @@ export default function AuthModal({
                   <div className="mt-3 text-center sm:mt-5">
                     <Dialog.Title
                       as="h3"
-                      className="text-base font-semibold leading-6 text-gray-900"
+                      className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100"
                     >
                       {isRegistering ? 'Create an account' : 'Sign in to your account'}
                     </Dialog.Title>
@@ -91,7 +91,7 @@ export default function AuthModal({
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                   {isRegistering && (
                     <div>
-                      <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Name
                       </label>
                       <input
@@ -100,14 +100,14 @@ export default function AuthModal({
                         required
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+                        className="block w-full rounded-md bg-gray-100 dark:bg-gray-700 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-indigo-500"
                         placeholder="Enter your name"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Email
                     </label>
                     <input
@@ -116,13 +116,13 @@ export default function AuthModal({
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+                      className="block w-full rounded-md bg-gray-100 dark:bg-gray-700 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-indigo-500"
                       placeholder="Enter your email"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Password
                     </label>
                     <input
@@ -131,14 +131,14 @@ export default function AuthModal({
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+                      className="block w-full rounded-md bg-gray-100 dark:bg-gray-700 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-indigo-500"
                       placeholder="Enter your password"
                     />
                   </div>
 
                   {isRegistering && (
                     <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Confirm Password
                       </label>
                       <input
@@ -147,20 +147,20 @@ export default function AuthModal({
                         required
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+                        className="block w-full rounded-md bg-gray-100 dark:bg-gray-700 border-transparent px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-gray-600 focus:ring-indigo-500"
                         placeholder="Confirm your password"
                       />
                     </div>
                   )}
 
                   {error && (
-                    <p className="text-sm text-red-600">{error}</p>
+                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                   )}
 
                   <div className="mt-5 sm:mt-6 space-y-4">
                     <button
                       type="submit"
-                      className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                      className="inline-flex w-full justify-center rounded-md bg-indigo-600 dark:bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 dark:hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-400"
                     >
                       {isRegistering ? 'Sign up' : 'Sign in'}
                     </button>
@@ -170,7 +170,7 @@ export default function AuthModal({
                         setIsRegistering(!isRegistering)
                         setError('')
                       }}
-                      className="text-sm text-indigo-600 hover:text-indigo-500"
+                      className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
                     >
                       {isRegistering
                         ? 'Already have an account? Sign in'

@@ -22,19 +22,31 @@ interface Movie {
 async function getMovies(genre?: string, searchQuery?: string): Promise<Movie[]> {
   const supabase = createServerComponentClient({ cookies })
 
+  // First, get movie IDs that match the genre
+  let movieIds: string[] = []
+  if (genre) {
+    const { data: genreMovies } = await supabase
+      .from('movie_genres')
+      .select('movie_id, genres!inner(name)')
+      .eq('genres.name', genre)
+    
+    movieIds = (genreMovies || []).map(m => m.movie_id)
+  }
+
+  // Then get all movies with their genres
   let query = supabase
     .from('movies')
     .select(`
       *,
-      movie_genres!inner (
-        genres!inner (
+      movie_genres (
+        genres (
           name
         )
       )
     `)
 
   if (genre) {
-    query = query.eq('movie_genres.genres.name', genre)
+    query = query.in('id', movieIds)
   }
 
   if (searchQuery) {
