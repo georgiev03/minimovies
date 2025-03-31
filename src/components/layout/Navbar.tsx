@@ -1,0 +1,103 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useAuth } from '../../lib/contexts/AuthContext'
+import { useTheme } from '../../lib/contexts/ThemeContext'
+import AuthModal from '../auth/AuthModal'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { FilmIcon, UserIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+
+export default function Navbar() {
+  const { user, signOut } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    async function fetchUserRole() {
+      if (!user) return
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      
+      setIsAdmin(profile?.role === 'admin')
+    }
+
+    fetchUserRole()
+  }, [user, supabase])
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'
+
+  return (
+    <nav className="bg-white shadow dark:bg-gray-800 transition-colors duration-200">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 justify-between">
+          <div className="flex">
+            <div className="flex flex-shrink-0 items-center">
+              <Link href="/" className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                MiniMovies
+              </Link>
+            </div>
+            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <Link
+                href={isAdmin ? "/admin/movies" : "/movies"}
+                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+              >
+                <FilmIcon className="h-5 w-5 mr-1" />
+                Movies
+              </Link>
+              {user && (
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100"
+                >
+                  <UserIcon className="h-5 w-5 mr-1" />
+                  Watch History
+                </Link>
+              )}
+            </div>
+          </div>
+          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+            <button
+              onClick={toggleTheme}
+              className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+            >
+              {isDark ? (
+                <SunIcon className="h-6 w-6" />
+              ) : (
+                <MoonIcon className="h-6 w-6" />
+              )}
+            </button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {displayName}
+                </span>
+                <button
+                  onClick={() => signOut()}
+                  className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-100 dark:ring-gray-600 dark:hover:bg-gray-600"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              >
+                Sign in
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+    </nav>
+  )
+} 
