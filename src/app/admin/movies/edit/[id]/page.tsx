@@ -23,7 +23,14 @@ export default async function EditMoviePage({
   // Fetch the movie data
   const { data: movie, error } = await supabase
     .from('movies')
-    .select('*')
+    .select(`
+      *,
+      movie_genres (
+        genres (
+          name
+        )
+      )
+    `)
     .eq('id', params.id)
     .single()
 
