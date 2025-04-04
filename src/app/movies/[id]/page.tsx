@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useTheme } from '@/lib/contexts/ThemeContext'
 import { useAuth } from '@/lib/contexts/AuthContext'
@@ -32,13 +32,6 @@ interface Review {
   }
 }
 
-declare global {
-  interface Window {
-    onYouTubeIframeAPIReady: () => void;
-    YT: any;
-  }
-}
-
 function getYouTubeVideoId(url: string) {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
@@ -57,27 +50,59 @@ export default function MoviePage({ params }: { params: { id: string } }) {
   const { addToHistory } = useWatchHistory()
   const supabase = createClientComponentClient()
 
-  // Handle YouTube player events
-  useEffect(() => {
-    function handleMessage(event: MessageEvent) {
-      if (event.origin !== "https://www.youtube.com") return;
+  // Add to watch history when video starts playing
+  const handleMessage = (event: MessageEvent) => {
+    if (!event.origin.includes('youtube.com')) return;
+    
+    try {
+      const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
       
-      try {
-        const data = JSON.parse(event.data);
-        if (data.event === "onStateChange" && data.info === 1) { // 1 = playing
-          if (!hasStartedWatching && user) {
-            setHasStartedWatching(true);
-            addToHistory(params.id, 0);
-          }
-        }
-      } catch (err) {
-        // Ignore parsing errors from non-player messages
-      }
-    }
+      // Log all YouTube events for debugging
+      console.log('YouTube event:', data);
 
+      // Handle different YouTube player states
+      if (data.event === "onStateChange") {
+        // State 1 = playing
+        if (data.info === 1 && !hasStartedWatching && user) {
+          console.log('Video started playing, adding to watch history');
+          setHasStartedWatching(true);
+          addToHistory(params.id, 0).then(() => {
+            console.log('Added to watch history successfully');
+          }).catch(err => {
+            console.error('Error adding to watch history:', err);
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error handling YouTube message:', err);
+    }
+  };
+
+  useEffect(() => {
+    // Add event listener for YouTube player messages
     window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [user, params.id, addToHistory, hasStartedWatching]);
+    
+    // Initialize YouTube player
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+    // Declare global YouTube player variable
+    (window as any).onYouTubeIframeAPIReady = () => {
+      console.log('YouTube API ready');
+    };
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      delete (window as any).onYouTubeIframeAPIReady;
+    };
+  }, [params.id, user, hasStartedWatching, addToHistory]);
+
+  // Reset watch state when movie changes
+  useEffect(() => {
+    setHasStartedWatching(false);
+  }, [params.id]);
 
   useEffect(() => {
     async function fetchMovie() {
@@ -104,17 +129,18 @@ export default function MoviePage({ params }: { params: { id: string } }) {
         // Fetch reviews with user information
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select(`
-            *,
-            profile:profiles!reviews_user_id_fkey (
-              full_name
-            )
-          `)
+          .select('*, profiles(full_name)')
           .eq('movie_id', params.id)
           .order('created_at', { ascending: false })
 
         if (reviewsError) throw reviewsError
-        setReviews(reviewsData || [])
+        const formattedReviews = reviewsData?.map(review => ({
+          ...review,
+          profile: {
+            full_name: review.profiles.full_name
+          }
+        })) || []
+        setReviews(formattedReviews)
       } catch (err) {
         console.error('Error fetching movie:', err)
         setError('Failed to load movie')
@@ -152,19 +178,31 @@ export default function MoviePage({ params }: { params: { id: string } }) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Movie Player Section */}
       <div className="mb-8">
         <div className="relative pb-[56.25%] bg-black">
           {movie?.video_url && (
             <iframe
-              src={`https://www.youtube.com/embed/${getYouTubeVideoId(movie.video_url)}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}&rel=0&modestbranding=1`}
+              src={`https://www.youtube.com/embed/${getYouTubeVideoId(movie.video_url)}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}&modestbranding=1&rel=0&autoplay=0`}
               className="absolute inset-0 w-full h-full"
-              title={`Watch ${movie.title}`}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              loading="lazy"
-              sandbox="allow-same-origin allow-scripts allow-popups allow-presentation"
+              id="youtube-player"
+              onLoad={() => {
+                console.log('YouTube iframe loaded');
+                // Send a message to the iframe to enable API
+                const iframe = document.getElementById('youtube-player') as HTMLIFrameElement;
+                if (iframe && iframe.contentWindow) {
+                  // Send multiple initialization messages to ensure the player is ready
+                  const messages = [
+                    '{"event":"listening","id":0}',
+                    '{"event":"command","func":"addEventListener","args":["onStateChange"]}',
+                    '{"event":"command","func":"playVideo","args":""}'
+                  ];
+                  messages.forEach(msg => {
+                    iframe.contentWindow?.postMessage(msg, '*');
+                  });
+                }
+              }}
             />
           )}
         </div>
@@ -194,22 +232,41 @@ export default function MoviePage({ params }: { params: { id: string } }) {
           <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Reviews
           </h2>
-          {user && (
-            <button
-              onClick={() => setIsReviewModalOpen(true)}
-              className={`px-4 py-2 rounded-md text-white ${
-                isDark ? 'bg-indigo-500 hover:bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
-            >
-              Write a Review
-            </button>
-          )}
+          <div className="flex items-center">
+            <div className="flex items-center">
+              {[...Array(5)].map((_, i) => (
+                <svg
+                  key={i}
+                  className={`w-6 h-6 ${
+                    i < (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length || 0)
+                      ? isDark
+                        ? 'text-yellow-400'
+                        : 'text-yellow-500'
+                      : isDark
+                      ? 'text-gray-600'
+                      : 'text-gray-300'
+                  }`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
+            </div>
+            <span className={`ml-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              {reviews.length > 0
+                ? `${(reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)} out of 5 (${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'})`
+                : 'No reviews yet'}
+            </span>
+          </div>
         </div>
 
         {reviews.length === 0 ? (
-          <p className={`text-center py-8 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            No reviews yet. Be the first to review this movie!
-          </p>
+          <div className="flex flex-col items-center py-8">
+            <p className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              No reviews yet. Be the first to review this movie!
+            </p>
+          </div>
         ) : (
           <div className="space-y-6">
             {reviews.map((review) => (

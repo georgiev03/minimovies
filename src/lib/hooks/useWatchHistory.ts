@@ -90,8 +90,33 @@ export function useWatchHistory() {
       if (error) {
         throw error
       }
+
+      // Fetch updated history after adding new entry
+      const { data: updatedHistory, error: fetchError } = await supabase
+        .from('watch_history')
+        .select(`
+          *,
+          movie:movies (
+            title,
+            thumbnail_url,
+            movie_genres (
+              genres (
+                name
+              )
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('watched_at', { ascending: false })
+
+      if (fetchError) {
+        throw fetchError
+      }
+
+      setHistory(updatedHistory || [])
     } catch (err) {
       console.error('Error adding to watch history:', err)
+      throw err // Re-throw error so it can be caught by the component
     }
   }
 
