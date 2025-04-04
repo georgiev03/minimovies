@@ -23,6 +23,7 @@ export type WatchHistoryEntry = {
 export function useWatchHistory() {
   const [history, setHistory] = useState<WatchHistoryEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
   const supabase = createClientComponentClient()
 
@@ -34,30 +35,38 @@ export function useWatchHistory() {
     }
 
     async function fetchWatchHistory(currentUser: User) {
-      const { data, error } = await supabase
-        .from('watch_history')
-        .select(`
-          *,
-          movie:movies (
-            title,
-            thumbnail_url,
-            movie_genres (
-              genres (
-                name
+      try {
+        setLoading(true)
+        setError(null)
+
+        const { data, error } = await supabase
+          .from('watch_history')
+          .select(`
+            *,
+            movie:movies (
+              title,
+              thumbnail_url,
+              movie_genres (
+                genres (
+                  name
+                )
               )
             )
-          )
-        `)
-        .eq('user_id', currentUser.id)
-        .order('watched_at', { ascending: false })
+          `)
+          .eq('user_id', currentUser.id)
+          .order('watched_at', { ascending: false })
 
-      if (error) {
-        console.error('Error fetching watch history:', error)
-        return
+        if (error) {
+          throw error
+        }
+
+        setHistory(data || [])
+      } catch (err) {
+        console.error('Error fetching watch history:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch watch history')
+      } finally {
+        setLoading(false)
       }
-
-      setHistory(data || [])
-      setLoading(false)
     }
 
     fetchWatchHistory(user)
@@ -66,19 +75,25 @@ export function useWatchHistory() {
   const addToHistory = async (movieId: string, progressSeconds: number) => {
     if (!user) return
 
-    const { error } = await supabase
-      .from('watch_history')
-      .upsert({
-        user_id: user.id,
-        movie_id: movieId,
-        watched_at: new Date().toISOString(),
-        progress_seconds: progressSeconds
-      })
+    try {
+      const { error } = await supabase
+        .from('watch_history')
+        .upsert({
+          user_id: user.id,
+          movie_id: movieId,
+          watched_at: new Date().toISOString(),
+          progress_seconds: progressSeconds
+        }, {
+          onConflict: 'user_id,movie_id'
+        })
 
-    if (error) {
-      console.error('Error adding to watch history:', error)
+      if (error) {
+        throw error
+      }
+    } catch (err) {
+      console.error('Error adding to watch history:', err)
     }
   }
 
-  return { history, loading, addToHistory }
+  return { history, loading, error, addToHistory }
 } 
