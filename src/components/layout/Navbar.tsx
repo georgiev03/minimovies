@@ -8,34 +8,60 @@ import { useTheme } from '../../lib/contexts/ThemeContext'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { FilmIcon, UserIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 
+// Create Supabase client outside component to prevent recreation on every render
+const supabase = createClientComponentClient()
+
 export default function Navbar() {
   const router = useRouter()
   const { user, signOut, loading } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const [isAdmin, setIsAdmin] = useState(false)
-  const supabase = createClientComponentClient()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     async function fetchUserRole() {
-      if (!user) return
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-      
-      setIsAdmin(profile?.role === 'admin')
+      try {
+        if (!user) {
+          setIsAdmin(false)
+          return
+        }
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        
+        setIsAdmin(profile?.role === 'admin')
+      } catch (error) {
+        console.error('Error fetching user role:', error)
+        setIsAdmin(false)
+      }
     }
 
-    fetchUserRole()
-  }, [user, supabase])
+    if (mounted) {
+      fetchUserRole()
+    }
+  }, [user, mounted])
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'
 
   const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
+    try {
+      await signOut()
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return null // or a loading skeleton
   }
 
   return (

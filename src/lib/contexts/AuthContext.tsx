@@ -21,13 +21,22 @@ const AuthContext = createContext<AuthContextType>({
   loading: true
 })
 
+// Create Supabase client outside component to prevent recreation on every render
+const supabase = createClientComponentClient()
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
@@ -40,14 +49,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [mounted])
 
   const signIn = async (email: string, password: string, redirectTo?: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       
-      // Redirect after successful login if a redirect URL was provided
       if (redirectTo) {
         router.push(redirectTo)
       }
@@ -59,7 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string, redirectTo?: string) => {
     try {
-      // First, check if a profile already exists for this email
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
@@ -70,7 +77,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('A profile with this email already exists')
       }
 
-      // Sign up the user
       const { error: signUpError, data } = await supabase.auth.signUp({
         email,
         password,
@@ -82,7 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (signUpError) {
-        // Make the password error message more user-friendly
         if (signUpError.message.includes('Password should contain')) {
           throw new Error('Your password must include at least one letter and one number')
         }
@@ -93,38 +98,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Failed to create user')
       }
 
-      // Create the profile
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([{
           id: data.user.id,
           email,
           full_name: fullName,
-          role: email === 'admin@gmail.com' ? 'admin' : 'user'
+          role: 'user'
         }])
-        .select()
-        .single()
 
       if (profileError) {
-        // If profile creation fails, delete the auth user
-        await supabase.auth.admin.deleteUser(data.user.id)
-        throw new Error('Failed to create profile. Please try again.')
+        throw profileError
       }
-      
-      // Redirect after successful signup if a redirect URL was provided
+
       if (redirectTo) {
         router.push(redirectTo)
       }
     } catch (error) {
-      console.error('Signup error:', error)
+      console.error('Sign up error:', error)
       throw error
     }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    router.push('/')
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      setUser(null)
+    } catch (error) {
+      console.error('Sign out error:', error)
+      throw error
+    }
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return null
   }
 
   return (

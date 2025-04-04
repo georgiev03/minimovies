@@ -13,23 +13,19 @@ export const metadata: Metadata = {
   description: 'A platform for watching and sharing short videos',
 }
 
-// Add script to handle initial theme
-function setInitialTheme() {
-  return {
-    __html: `
-      (function() {
-        function getInitialTheme() {
-          const savedTheme = localStorage.getItem('theme')
-          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-          
-          return savedTheme === 'dark' || (!savedTheme && prefersDark) ? 'dark' : ''
-        }
-        
-        document.documentElement.classList.add(getInitialTheme())
-      })()
-    `,
-  }
-}
+// Add script to handle initial theme without DOM manipulation
+const themeScript = `
+  try {
+    const savedTheme = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  } catch (e) {}
+`
 
 export default function RootLayout({
   children,
@@ -39,7 +35,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={setInitialTheme()} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: themeScript
+          }}
+        />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200`}>
         <AuthProvider>
