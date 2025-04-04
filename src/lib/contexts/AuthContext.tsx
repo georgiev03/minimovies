@@ -3,12 +3,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { User } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
 
 type AuthContextType = {
   user: User | null
-  signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, fullName: string) => Promise<void>
+  signIn: (email: string, password: string, redirectTo?: string) => Promise<void>
+  signUp: (email: string, password: string, fullName: string, redirectTo?: string) => Promise<void>
   signOut: () => Promise<void>
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,26 +18,46 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
+  loading: true
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   const supabase = createClientComponentClient()
+  const router = useRouter()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      setLoading(false)
+    })
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
   }, [supabase])
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+  const signIn = async (email: string, password: string, redirectTo?: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      
+      // Redirect after successful login if a redirect URL was provided
+      if (redirectTo) {
+        router.push(redirectTo)
+      }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      throw error
+    }
   }
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, redirectTo?: string) => {
     try {
       // First, check if a profile already exists for this email
       const { data: existingProfile } = await supabase
@@ -88,6 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.admin.deleteUser(data.user.id)
         throw new Error('Failed to create profile. Please try again.')
       }
+      
+      // Redirect after successful signup if a redirect URL was provided
+      if (redirectTo) {
+        router.push(redirectTo)
+      }
     } catch (error) {
       console.error('Signup error:', error)
       throw error
@@ -97,10 +124,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
+    router.push('/')
   }
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   )

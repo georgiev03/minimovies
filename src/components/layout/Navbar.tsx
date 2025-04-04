@@ -2,16 +2,16 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '../../lib/contexts/AuthContext'
 import { useTheme } from '../../lib/contexts/ThemeContext'
-import AuthModal from '../auth/AuthModal'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { FilmIcon, UserIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
 
 export default function Navbar() {
-  const { user, signOut } = useAuth()
+  const router = useRouter()
+  const { user, signOut, loading } = useAuth()
   const { isDark, toggleTheme } = useTheme()
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClientComponentClient()
 
@@ -32,6 +32,11 @@ export default function Navbar() {
   }, [user, supabase])
 
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
 
   return (
     <nav className="bg-white shadow dark:bg-gray-800 transition-colors duration-200">
@@ -73,31 +78,32 @@ export default function Navbar() {
                 <MoonIcon className="h-6 w-6" />
               )}
             </button>
-            {user ? (
+            
+            {loading ? (
+              <div className="h-6 w-6 rounded-full border-2 border-t-indigo-500 animate-spin"></div>
+            ) : user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-700 dark:text-gray-300">
                   {displayName}
                 </span>
                 <button
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                   className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-100 dark:ring-gray-600 dark:hover:bg-gray-600"
                 >
                   Sign out
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => setIsAuthModalOpen(true)}
+              <Link
+                href="/login"
                 className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
               >
                 Sign in
-              </button>
+              </Link>
             )}
           </div>
         </div>
       </div>
-
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </nav>
   )
 } 

@@ -6,6 +6,7 @@ import { useTheme } from '@/lib/contexts/ThemeContext'
 import { useAuth } from '@/lib/contexts/AuthContext'
 import { useWatchHistory } from '@/lib/hooks/useWatchHistory'
 import ReviewModal from '@/components/review/ReviewModal'
+import { useRouter } from 'next/navigation'
 
 interface Movie {
   id: string
@@ -25,7 +26,7 @@ interface Review {
   user_id: string
   movie_id: string
   rating: number
-  comment: string
+  review: string
   created_at: string
   profile: {
     full_name: string
@@ -49,6 +50,14 @@ export default function MoviePage({ params }: { params: { id: string } }) {
   const { user } = useAuth()
   const { addToHistory } = useWatchHistory()
   const supabase = createClientComponentClient()
+  const router = useRouter()
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!user) {
+      router.push('/login?redirect=' + encodeURIComponent(`/movies/${params.id}`))
+    }
+  }, [user, router, params.id])
 
   // Add to watch history when video starts playing
   const handleMessage = (event: MessageEvent) => {
@@ -129,17 +138,61 @@ export default function MoviePage({ params }: { params: { id: string } }) {
         // Fetch reviews with user information
         const { data: reviewsData, error: reviewsError } = await supabase
           .from('reviews')
-          .select('*, profiles(full_name)')
+          .select(`
+            id, 
+            user_id, 
+            movie_id, 
+            rating, 
+            review,
+            created_at
+          `)
           .eq('movie_id', params.id)
           .order('created_at', { ascending: false })
 
         if (reviewsError) throw reviewsError
-        const formattedReviews = reviewsData?.map(review => ({
-          ...review,
-          profile: {
-            full_name: review.profiles.full_name
+        
+        // After getting reviews, fetch profiles separately to get full names
+        const userIds = reviewsData?.map(review => review.user_id) || []
+        
+        // Get profile data for users who left reviews
+        let userProfiles: Record<string, string> = {}
+        if (userIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', userIds)
+            
+          if (profilesData) {
+            // Create a mapping of user_id to full_name
+            userProfiles = profilesData.reduce((acc: Record<string, string>, profile: any) => {
+              if (profile.id && profile.full_name) {
+                acc[profile.id] = profile.full_name
+              }
+              return acc
+            }, {})
           }
-        })) || []
+        }
+        
+        // Map the data to match our Review interface
+        const formattedReviews = reviewsData?.map(review => {
+          return {
+            id: review.id,
+            user_id: review.user_id,
+            movie_id: review.movie_id,
+            rating: review.rating,
+            review: review.review,
+            created_at: review.created_at,
+            profile: {
+              full_name: userProfiles[review.user_id] || `User ${review.user_id.substring(0, 6)}`
+            }
+          };
+        }) || []
+        
+        console.log('Formatted reviews:', JSON.stringify(formattedReviews, null, 2))
+        formattedReviews.forEach((review, index) => {
+          console.log(`Review ${index + 1} review:`, review.review)
+        })
+        
         setReviews(formattedReviews)
       } catch (err) {
         console.error('Error fetching movie:', err)
@@ -273,13 +326,18 @@ export default function MoviePage({ params }: { params: { id: string } }) {
               <div
                 key={review.id}
                 className={`p-4 rounded-lg ${
-                  isDark ? 'bg-gray-800' : 'bg-gray-50'
+                  isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <h3 className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {review.profile.full_name}
-                  </h3>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {review.profile.full_name}
+                    </p>
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {new Date(review.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
                       <svg
@@ -301,12 +359,17 @@ export default function MoviePage({ params }: { params: { id: string } }) {
                     ))}
                   </div>
                 </div>
-                <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {review.comment}
-                </p>
-                <p className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {new Date(review.created_at).toLocaleDateString()}
-                </p>
+                {review.review ? (
+                  <div className={`mt-4 p-4 rounded ${isDark ? 'bg-gray-700 border border-gray-600' : 'bg-gray-50 border border-gray-200'}`}>
+                    <p className={`${isDark ? 'text-white' : 'text-gray-800'} text-base leading-relaxed`}>
+                      "{review.review}"
+                    </p>
+                  </div>
+                ) : (
+                  <p className={`mt-4 italic ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    No review provided
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -320,4 +383,4 @@ export default function MoviePage({ params }: { params: { id: string } }) {
       />
     </div>
   )
-} 
+}
