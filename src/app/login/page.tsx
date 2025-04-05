@@ -59,6 +59,21 @@ export default function LoginPage() {
       </div>
     )
   }
+
+  // If user is logged in, don't show the login form
+  if (user) {
+    return (
+      <div className={`min-h-screen flex flex-col justify-center items-center py-12 sm:px-6 lg:px-8 ${
+        isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+      }`}>
+        <h2 className="text-2xl font-bold mb-4">You are already signed in</h2>
+        <p className="mb-4">Redirecting you to {redirectTo}...</p>
+        <div className={`animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 ${
+          isDark ? 'border-indigo-400' : 'border-indigo-600'
+        }`}></div>
+      </div>
+    )
+  }
   
   return (
     <Suspense fallback={<div>Loading...</div>}>

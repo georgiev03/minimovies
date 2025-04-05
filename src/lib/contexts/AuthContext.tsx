@@ -37,22 +37,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!mounted) return
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
     // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.error('Error getting session:', error)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initializeAuth()
 
     return () => subscription.unsubscribe()
   }, [mounted])
 
   const signIn = async (email: string, password: string, redirectTo?: string) => {
     try {
+      setLoading(true)
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       
@@ -62,11 +72,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign in error:', error)
       throw error
+    } finally {
+      setLoading(false)
     }
   }
 
   const signUp = async (email: string, password: string, fullName: string, redirectTo?: string) => {
     try {
+      setLoading(true)
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
@@ -117,23 +130,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign up error:', error)
       throw error
+    } finally {
+      setLoading(false)
     }
   }
 
   const signOut = async () => {
     try {
+      setLoading(true)
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       setUser(null)
+      router.push('/')
     } catch (error) {
       console.error('Sign out error:', error)
       throw error
+    } finally {
+      setLoading(false)
     }
-  }
-
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return null
   }
 
   return (

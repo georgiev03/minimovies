@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useTheme } from '@/lib/contexts/ThemeContext'
+import { useAuth } from '@/lib/contexts/AuthContext'
 
 type MovieGenre = {
   genres: {
@@ -25,6 +26,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const supabase = createClientComponentClient()
   const { isDark } = useTheme()
+  const { user } = useAuth()
 
   useEffect(() => {
     async function getFeaturedMovies() {
@@ -72,12 +74,14 @@ export default function HomePage() {
                 Discover a curated collection of films. Keep track of your favorites and share your thoughts with a community of movie lovers.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center rounded-md bg-white px-6 py-3 text-base font-medium text-indigo-600 shadow-sm hover:bg-indigo-50"
-                >
-                  Sign In
-                </Link>
+                {!user && (
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center rounded-md bg-white px-6 py-3 text-base font-medium text-indigo-600 shadow-sm hover:bg-indigo-50"
+                  >
+                    Sign In
+                  </Link>
+                )}
                 <Link
                   href="/movies"
                   className="inline-flex items-center rounded-md bg-indigo-800 bg-opacity-50 px-6 py-3 text-base font-medium text-white shadow-sm ring-1 ring-white ring-opacity-20 hover:bg-opacity-60"
@@ -194,23 +198,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-indigo-50 dark:bg-gray-800 rounded-2xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Ready to start your movie journey?
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-            Sign up today to get access to all features including personalized watch history and the ability to rate and review movies.
-          </p>
-          <Link
-            href="/login"
-            className="inline-flex items-center rounded-md bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-          >
-            Create an account
-          </Link>
-        </div>
-      </section>
+      {/* CTA Section - Only show when user is not logged in */}
+      {!user && (
+        <section className="bg-indigo-50 dark:bg-gray-800 rounded-2xl">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Ready to start your movie journey?
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+              Sign up today to get access to all features including personalized watch history and the ability to rate and review movies.
+            </p>
+            <Link
+              href="/login"
+              className="inline-flex items-center rounded-md bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            >
+              Create an account
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   )
 } 
