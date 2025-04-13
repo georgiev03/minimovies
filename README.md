@@ -1,11 +1,11 @@
 # Mini Movies
 
-A web-based movie application built with Next.js and Supabase.
+A web-based movie application built with Next.js, TypeScript, Tailwind CSS, and Supabase.
 
 ## Features
 
 - User authentication (sign up, sign in, sign out)
-- Movie browsing with genre filtering and search
+- Movie browsing with genre filtering and dynamic search
 - Video playback
 - Admin dashboard for managing movies
 - Role-based access control
@@ -45,6 +45,8 @@ A web-based movie application built with Next.js and Supabase.
    - Create the following tables:
      - `profiles` (extends Supabase auth.users)
      - `movies`
+     - `genres`
+     - `movie_genres`
      - `watch_history`
    - Set up Row Level Security (RLS) policies
    - Enable email authentication
@@ -73,11 +75,21 @@ A web-based movie application built with Next.js and Supabase.
 - id (uuid, primary key)
 - title (text)
 - description (text)
-- genre (text)
 - video_url (text)
 - thumbnail_url (text)
 - created_at (timestamp with time zone)
 - updated_at (timestamp with time zone)
+
+### genres
+- id (uuid, primary key)
+- name (text, unique)
+- created_at (timestamp with time zone)
+
+### movie_genres
+- movie_id (uuid, references movies.id)
+- genre_id (uuid, references genres.id)
+- created_at (timestamp with time zone)
+- Primary key: (movie_id, genre_id)
 
 ### watch_history
 - id (uuid, primary key)
@@ -121,6 +133,36 @@ CREATE POLICY "Only admins can update movies" ON movies
 
 CREATE POLICY "Only admins can delete movies" ON movies
   FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'admin'
+    )
+  );
+```
+
+### genres
+```sql
+CREATE POLICY "Anyone can view genres" ON genres
+  FOR SELECT USING (true);
+
+CREATE POLICY "Only admins can manage genres" ON genres
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.role = 'admin'
+    )
+  );
+```
+
+### movie_genres
+```sql
+CREATE POLICY "Anyone can view movie genres" ON movie_genres
+  FOR SELECT USING (true);
+
+CREATE POLICY "Only admins can manage movie genres" ON movie_genres
+  FOR ALL USING (
     EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
