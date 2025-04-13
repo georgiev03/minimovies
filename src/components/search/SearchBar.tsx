@@ -1,25 +1,30 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 
 export default function SearchBar() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [query, setQuery] = useState(searchParams.get('q') || '')
+  const debouncedQuery = useDebounce(query, 300)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (query.trim()) {
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
       const params = new URLSearchParams(searchParams.toString())
-      params.set('q', query.trim())
+      params.set('q', debouncedQuery.trim())
+      router.push(`/movies?${params.toString()}`)
+    } else if (searchParams.get('q')) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('q')
       router.push(`/movies?${params.toString()}`)
     }
-  }
+  }, [debouncedQuery, router, searchParams])
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-xs">
+    <div className="w-full max-w-xs">
       <div className="relative">
         <input
           type="text"
@@ -30,6 +35,6 @@ export default function SearchBar() {
         />
         <MagnifyingGlassIcon className="absolute left-2.5 top-2 h-4 w-4 text-gray-400 dark:text-gray-500" />
       </div>
-    </form>
+    </div>
   )
 } 
