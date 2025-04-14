@@ -19,12 +19,33 @@ A web-based movie application built with Next.js, TypeScript, Tailwind CSS, and 
 - npm or yarn
 - Supabase account and project
 
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js app router pages
+│   ├── api/               # API routes
+│   ├── admin/             # Admin dashboard
+│   ├── movies/            # Movie pages
+│   ├── profile/           # User profile pages
+│   └── login/             # Authentication pages
+├── components/            # React components
+├── lib/                   # Utility functions and configurations
+│   ├── contexts/         # React contexts
+│   ├── hooks/            # Custom React hooks
+│   ├── interfaces/       # TypeScript interfaces
+│   ├── repositories/     # Database repositories
+│   ├── services/         # Business logic services
+│   └── utils/            # Utility functions
+└── styles/               # Global styles
+```
+
 ## Setup
 
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
-   cd mini-movies
+   git clone https://github.com/yourusername/minimovies.git
+   cd minimovies
    ```
 
 2. Install dependencies:
