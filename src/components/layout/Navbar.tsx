@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../lib/contexts/AuthContext'
 import { useTheme } from '../../lib/contexts/ThemeContext'
@@ -69,9 +70,9 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
-            <div className="flex flex-shrink-0 items-center">
-              <Link href="/" className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                MiniMovies
+          <div className="flex flex-shrink-0 items-center">
+              <Link href="/" className="flex items-center">
+                <Image src="/logo.png" alt="MiniMovies Logo" width={140} height={50} priority />
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
