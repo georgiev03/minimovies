@@ -6,9 +6,10 @@ interface TooltipProps {
   content: string;
   x: number;
   y: number;
+  dark?: boolean;
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ visible, content, x, y }) => {
+const Tooltip: React.FC<TooltipProps> = ({ visible, content, x, y, dark }) => {
   if (!visible) return null;
   return createPortal(
     <div
@@ -19,13 +20,13 @@ const Tooltip: React.FC<TooltipProps> = ({ visible, content, x, y }) => {
         zIndex: 9999,
         pointerEvents: 'none',
         maxWidth: 320,
-        background: 'rgba(30, 41, 59, 0.98)',
-        color: 'white',
+        background: dark ? 'rgba(30, 41, 59, 0.98)' : 'white',
+        color: dark ? 'white' : '#1e293b',
         padding: '12px',
         borderRadius: '8px',
         fontSize: '0.875rem',
         boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
-        border: '1px solid #6366f1',
+        border: dark ? '1px solid #6366f1' : '1px solid #cbd5e1',
         whiteSpace: 'pre-line',
         wordBreak: 'break-word',
       }}

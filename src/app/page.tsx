@@ -216,7 +216,7 @@ export default function HomePage() {
                 </Link>
               ))}
             </div>
-            <Tooltip visible={tooltip.visible} content={tooltip.content} x={tooltip.x} y={tooltip.y} />
+            <Tooltip visible={tooltip.visible} content={tooltip.content} x={tooltip.x} y={tooltip.y} dark={isDark} />
             </>
           )}
         </div>
