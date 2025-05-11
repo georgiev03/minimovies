@@ -202,7 +202,7 @@ export default function HomePage() {
                             visible: true,
                             content: movie.description,
                             x: rect.left + rect.width / 2,
-                            y: rect.top - 12
+                            y: rect.top - 32
                           });
                         }}
                         onMouseLeave={() => setTooltip(t => ({...t, visible: false}))}
