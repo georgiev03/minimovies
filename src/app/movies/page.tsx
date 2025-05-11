@@ -1,9 +1,10 @@
-import React from 'react'
+'use client'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import SearchBar from '@/components/search/SearchBar'
 import { MOVIE_GENRES } from '@/lib/constants/genres'
+import Tooltip from '../components/Tooltip'
 
 interface MovieGenre {
   genres: {
@@ -19,56 +20,49 @@ interface Movie {
   movie_genres: MovieGenre[]
 }
 
-async function getMovies(genre?: string, searchQuery?: string): Promise<Movie[]> {
-  const supabase = createServerComponentClient({ cookies })
+export default function MoviesPage({ searchParams }: { searchParams: { genre?: string; q?: string } }) {
+  const [movies, setMovies] = useState<Movie[]>([])
+  const [loading, setLoading] = useState(true)
+  const [tooltip, setTooltip] = useState<{visible: boolean, content: string, x: number, y: number}>({visible: false, content: '', x: 0, y: 0})
+  const supabase = createClientComponentClient()
 
-  // First, get movie IDs that match the genre
-  let movieIds: string[] = []
-  if (genre) {
-    const { data: genreMovies } = await supabase
-      .from('movie_genres')
-      .select('movie_id, genres!inner(name)')
-      .eq('genres.name', genre)
-    
-    movieIds = (genreMovies || []).map(m => m.movie_id)
-  }
-
-  // Then get all movies with their genres
-  let query = supabase
-    .from('movies')
-    .select(`
-      *,
-      movie_genres (
-        genres (
-          name
-        )
-      )
-    `)
-
-  if (genre) {
-    query = query.in('id', movieIds)
-  }
-
-  if (searchQuery) {
-    query = query.ilike('title', `%${searchQuery}%`)
-  }
-
-  const { data: movies, error } = await query
-
-  if (error) {
-    console.error('Error fetching movies:', error)
-    return []
-  }
-
-  return movies || []
-}
-
-export default async function MoviesPage({
-  searchParams,
-}: {
-  searchParams: { genre?: string; q?: string }
-}) {
-  const movies = await getMovies(searchParams.genre, searchParams.q)
+  useEffect(() => {
+    async function fetchMovies() {
+      setLoading(true)
+      let movieIds: string[] = []
+      if (searchParams.genre) {
+        const { data: genreMovies } = await supabase
+          .from('movie_genres')
+          .select('movie_id, genres!inner(name)')
+          .eq('genres.name', searchParams.genre)
+        movieIds = (genreMovies || []).map(m => m.movie_id)
+      }
+      let query = supabase
+        .from('movies')
+        .select(`
+          *,
+          movie_genres (
+            genres (
+              name
+            )
+          )
+        `)
+      if (searchParams.genre) {
+        query = query.in('id', movieIds)
+      }
+      if (searchParams.q) {
+        query = query.ilike('title', `%${searchParams.q}%`)
+      }
+      const { data: movies, error } = await query
+      if (error) {
+        setMovies([])
+      } else {
+        setMovies(movies || [])
+      }
+      setLoading(false)
+    }
+    fetchMovies()
+  }, [supabase, searchParams.genre, searchParams.q])
 
   return (
     <div className="space-y-6">
@@ -103,39 +97,62 @@ export default async function MoviesPage({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4">
-        {movies.map((movie) => (
-          <Link
-            key={movie.id}
-            href={`/movies/${movie.id}`}
-            className="group relative overflow-hidden rounded-lg bg-white shadow-md transition-transform hover:scale-105 dark:bg-gray-800"
-          >
-            <div className="relative pb-[140%]">
-              <img
-                src={movie.thumbnail_url}
-                alt={movie.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            </div>
-            <div className="p-3">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-1">{movie.title}</h3>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{movie.description}</p>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {movie.movie_genres
-                  .filter((mg): mg is MovieGenre & { genres: { name: string } } => mg.genres !== null)
-                  .map((mg) => (
-                    <span
-                      key={mg.genres.name}
-                      className="inline-flex items-center rounded-full bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
-                    >
-                      {mg.genres.name}
-                    </span>
-                  ))}
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 dark:border-indigo-400"></div>
+        </div>
+      ) : (
+        <>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-4">
+          {movies.map((movie) => (
+            <Link
+              key={movie.id}
+              href={`/movies/${movie.id}`}
+              className="group relative overflow-visible rounded-lg bg-white shadow-md transition-transform hover:scale-105 dark:bg-gray-800"
+            >
+              <div className="relative pb-[140%]">
+                <img
+                  src={movie.thumbnail_url}
+                  alt={movie.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
               </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+              <div className="p-3">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white line-clamp-1">{movie.title}</h3>
+                <div
+                  className="relative group"
+                  onMouseEnter={e => {
+                    const rect = (e.target as HTMLElement).getBoundingClientRect();
+                    setTooltip({
+                      visible: true,
+                      content: movie.description,
+                      x: rect.left + rect.width / 2,
+                      y: rect.top - 12
+                    });
+                  }}
+                  onMouseLeave={() => setTooltip(t => ({...t, visible: false}))}
+                >
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2 cursor-pointer">{movie.description}</p>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {movie.movie_genres
+                    .filter((mg): mg is MovieGenre & { genres: { name: string } } => mg.genres !== null)
+                    .map((mg) => (
+                      <span
+                        key={mg.genres.name}
+                        className="inline-flex items-center rounded-full bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300"
+                      >
+                        {mg.genres.name}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+        <Tooltip visible={tooltip.visible} content={tooltip.content} x={tooltip.x} y={tooltip.y} />
+        </>
+      )}
     </div>
   )
 } 

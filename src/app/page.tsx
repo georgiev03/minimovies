@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useTheme } from '@/lib/contexts/ThemeContext'
 import { useAuth } from '@/lib/contexts/AuthContext'
+import Tooltip from './components/Tooltip'
 
 type MovieGenre = {
   genres: {
@@ -27,6 +28,9 @@ export default function HomePage() {
   const supabase = createClientComponentClient()
   const { isDark } = useTheme()
   const { user } = useAuth()
+
+  // Tooltip state
+  const [tooltip, setTooltip] = useState<{visible: boolean, content: string, x: number, y: number}>({visible: false, content: '', x: 0, y: 0})
 
   useEffect(() => {
     async function getFeaturedMovies() {
@@ -163,12 +167,13 @@ export default function HomePage() {
               }`}></div>
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               {featuredMovies.map((movie) => (
                 <Link
                   key={movie.id}
                   href={`/movies/${movie.id}`}
-                  className="group relative overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg"
+                  className="group relative overflow-visible rounded-lg bg-gray-50 dark:bg-gray-800 shadow-md transition-all hover:scale-105 hover:shadow-lg"
                 >
                   <div className="relative pb-[150%]">
                     <img
@@ -189,11 +194,30 @@ export default function HomePage() {
                           </span>
                         ))}
                       </div>
+                      <div
+                        className="relative group"
+                        onMouseEnter={e => {
+                          const rect = (e.target as HTMLElement).getBoundingClientRect();
+                          setTooltip({
+                            visible: true,
+                            content: movie.description,
+                            x: rect.left + rect.width / 2,
+                            y: rect.top - 12
+                          });
+                        }}
+                        onMouseLeave={() => setTooltip(t => ({...t, visible: false}))}
+                      >
+                        <p className="mt-1 text-xs text-gray-300 line-clamp-2 cursor-pointer">
+                          {movie.description}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
+            <Tooltip visible={tooltip.visible} content={tooltip.content} x={tooltip.x} y={tooltip.y} />
+            </>
           )}
         </div>
       </section>
