@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import SearchBar from '@/components/search/SearchBar'
 import { MOVIE_GENRES } from '@/lib/constants/genres'
 import Tooltip from '../components/Tooltip'
+import { useTheme } from '@/lib/contexts/ThemeContext'
 
 interface MovieGenre {
   genres: {
@@ -25,6 +26,7 @@ export default function MoviesPage({ searchParams }: { searchParams: { genre?: s
   const [loading, setLoading] = useState(true)
   const [tooltip, setTooltip] = useState<{visible: boolean, content: string, x: number, y: number}>({visible: false, content: '', x: 0, y: 0})
   const supabase = createClientComponentClient()
+  const { isDark } = useTheme()
 
   useEffect(() => {
     async function fetchMovies() {
@@ -150,7 +152,7 @@ export default function MoviesPage({ searchParams }: { searchParams: { genre?: s
             </Link>
           ))}
         </div>
-        <Tooltip visible={tooltip.visible} content={tooltip.content} x={tooltip.x} y={tooltip.y} />
+        <Tooltip visible={tooltip.visible} content={tooltip.content} x={tooltip.x} y={tooltip.y} dark={isDark} />
         </>
       )}
     </div>
