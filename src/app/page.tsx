@@ -180,7 +180,7 @@ export default function HomePage() {
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       <h3 className="text-sm font-semibold text-white truncate">{movie.title}</h3>
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {movie.movie_genres.slice(0, 2).map((mg: MovieGenre) => (
+                        {movie.movie_genres.map((mg: MovieGenre) => (
                           <span
                             key={mg.genres.name}
                             className="inline-flex items-center rounded-full bg-indigo-500 bg-opacity-70 px-2 py-0.5 text-xs font-medium text-white"
