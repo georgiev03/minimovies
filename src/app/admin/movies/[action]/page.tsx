@@ -53,7 +53,8 @@ export default function NewMovieForm({
           title: formData.title,
           description: formData.description,
           video_url: formData.video_url,
-          thumbnail_url: formData.thumbnail_url
+          thumbnail_url: formData.thumbnail_url,
+          genre: formData.genres[0] || 'Uncategorized'
         }])
         .select()
         .single()
@@ -101,13 +102,13 @@ export default function NewMovieForm({
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8">
         Add New Movie
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Title
           </label>
           <input
@@ -115,14 +116,15 @@ export default function NewMovieForm({
             id="title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500
+                       dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:bg-gray-700"
             placeholder="Enter movie title"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Description
           </label>
           <textarea
@@ -130,14 +132,15 @@ export default function NewMovieForm({
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={4}
-            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500
+                       dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:bg-gray-700"
             placeholder="Enter movie description"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Genres
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -146,23 +149,23 @@ export default function NewMovieForm({
                 key={genre}
                 type="button"
                 onClick={() => handleGenreToggle(genre)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
-                  formData.genres.includes(genre)
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200
+                  ${formData.genres.includes(genre)
+                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'}
+                `}
               >
                 {genre}
               </button>
             ))}
           </div>
           {formData.genres.length === 0 && (
-            <p className="mt-1 text-sm text-red-500">Please select at least one genre</p>
+            <p className="mt-1 text-sm text-red-500 dark:text-red-400">Please select at least one genre</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="video_url" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="video_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Video URL
           </label>
           <input
@@ -170,14 +173,15 @@ export default function NewMovieForm({
             id="video_url"
             value={formData.video_url}
             onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500
+                       dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:bg-gray-700"
             placeholder="Enter video URL"
             required
           />
         </div>
 
         <div>
-          <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="thumbnail_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Thumbnail URL
           </label>
           <input
@@ -185,28 +189,31 @@ export default function NewMovieForm({
             id="thumbnail_url"
             value={formData.thumbnail_url}
             onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500"
+            className="block w-full rounded-md bg-gray-100 border-transparent px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-indigo-500 focus:bg-white focus:ring-indigo-500
+                       dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:bg-gray-700"
             placeholder="Enter thumbnail URL"
             required
           />
         </div>
 
         {error && (
-          <div className="text-red-500 text-sm">{error}</div>
+          <div className="text-red-500 text-sm dark:text-red-400">{error}</div>
         )}
 
         <div className="flex justify-end space-x-3">
           <button
             type="button"
             onClick={() => router.push('/admin/movies')}
-            className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50
+                       dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 dark:ring-gray-700"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading || formData.genres.length === 0}
-            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50"
+            className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50
+                       dark:bg-indigo-700 dark:hover:bg-indigo-800 dark:text-white"
           >
             {loading ? 'Saving...' : 'Save'}
           </button>

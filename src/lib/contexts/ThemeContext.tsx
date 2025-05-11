@@ -17,36 +17,31 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem('theme')
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      
-      const initialTheme = savedTheme === 'dark' || (!savedTheme && prefersDark)
-      setIsDark(initialTheme)
-      document.documentElement.classList.toggle('dark', initialTheme)
-    } catch (error) {
-      console.error('Error setting initial theme:', error)
-    } finally {
-      setMounted(true)
-    }
+    // Get initial theme
+    const savedTheme = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const initialTheme = savedTheme === 'dark' || (!savedTheme && prefersDark)
+    
+    // Set initial theme
+    setIsDark(initialTheme)
+    document.documentElement.classList.toggle('dark', initialTheme)
+    
+    // Mark as mounted
+    setMounted(true)
   }, [])
 
   const toggleTheme = () => {
     const newTheme = !isDark
     setIsDark(newTheme)
-    try {
-      localStorage.setItem('theme', newTheme ? 'dark' : 'light')
-      document.documentElement.classList.toggle('dark', newTheme)
-    } catch (error) {
-      console.error('Error toggling theme:', error)
-    }
+    localStorage.setItem('theme', newTheme ? 'dark' : 'light')
+    document.documentElement.classList.toggle('dark', newTheme)
   }
 
-  // Return a default context value while mounting
+  // Prevent flash of wrong theme
   if (!mounted) {
     return (
       <ThemeContext.Provider value={{ isDark: false, toggleTheme }}>
-        {children}
+        <div style={{ visibility: 'hidden' }}>{children}</div>
       </ThemeContext.Provider>
     )
   }
@@ -58,7 +53,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function useTheme() {
+export const useTheme = () => {
   const context = useContext(ThemeContext)
   if (context === undefined) {
     throw new Error('useTheme must be used within a ThemeProvider')
